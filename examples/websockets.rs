@@ -1,18 +1,37 @@
-extern crate rustc_serialize;
 extern crate sha1;
 extern crate tiny_http;
+#[cfg(not(target_env="sgx"))]
+extern crate rustc_serialize;
 
 use std::io::Cursor;
 use std::io::Read;
 use std::thread::spawn;
 
-use rustc_serialize::base64::{Config, Newline, Standard, ToBase64};
+
+#[cfg(not(target_env="sgx"))]
+fn to_base64(data : [u8; sha1::DIGEST_LENGTH]) -> String {
+  use rustc_serialize::base64::{Config, Newline, Standard, ToBase64};
+  data.to_base64(Config {
+    char_set: Standard,
+    pad: true,
+    line_length: None,
+    newline: Newline::LF,
+  })
+}
+
+#[cfg(target_env="sgx")]
+fn to_base64(data : [u8; sha1::DIGEST_LENGTH]) -> String {
+  use base64::{Engine as _, engine::general_purpose};
+  general_purpose::STANDARD_NO_PAD.encode(&data[..])
+}
+
+
 
 fn home_page(port: u16) -> tiny_http::Response<Cursor<Vec<u8>>> {
     tiny_http::Response::from_string(format!(
         "
         <script type=\"text/javascript\">
-        var socket = new WebSocket(\"ws://localhost:{}/\", \"ping\");
+        var socket = new WebSocket(\"ws://Euler.local:{}/\", \"ping\");
 
         function send(data) {{
             socket.send(data);
@@ -52,12 +71,8 @@ fn convert_key(input: &str) -> String {
     let mut sha1 = Sha1::new();
     sha1.update(&input);
 
-    sha1.digest().bytes().to_base64(Config {
-        char_set: Standard,
-        pad: true,
-        line_length: None,
-        newline: Newline::LF,
-    })
+  to_base64(sha1.digest().bytes())
+
 }
 
 fn main() {

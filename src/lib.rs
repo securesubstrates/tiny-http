@@ -94,7 +94,8 @@
 #[cfg(any(
     feature = "ssl-openssl",
     feature = "ssl-rustls",
-    feature = "ssl-native-tls"
+    feature = "ssl-native-tls",
+    feature = "ssl-mbedtls"
 ))]
 use zeroize::Zeroizing;
 
@@ -114,7 +115,9 @@ use client::ClientConnection;
 use connection::Connection;
 use util::MessagesQueue;
 
-pub use common::{HTTPVersion, Header, HeaderField, Method, StatusCode};
+pub use common::{
+    HTTPVersion, Header, HeaderField, Method, StatusCode,
+};
 pub use connection::{ConfigListenAddr, ListenAddr, Listener};
 pub use request::{ReadWrite, Request};
 pub use response::{Response, ResponseBox};
@@ -196,7 +199,9 @@ pub struct SslConfig {
 impl Server {
     /// Shortcut for a simple server on a specific address.
     #[inline]
-    pub fn http<A>(addr: A) -> Result<Server, Box<dyn Error + Send + Sync + 'static>>
+    pub fn http<A>(
+        addr: A,
+    ) -> Result<Server, Box<dyn Error + Send + Sync + 'static>>
     where
         A: ToSocketAddrs,
     {
@@ -210,7 +215,8 @@ impl Server {
     #[cfg(any(
         feature = "ssl-openssl",
         feature = "ssl-rustls",
-        feature = "ssl-native-tls"
+        feature = "ssl-native-tls",
+        feature = "ssl-mbedtls"
     ))]
     #[inline]
     pub fn https<A>(
@@ -239,7 +245,9 @@ impl Server {
     }
 
     /// Builds a new server that listens on the specified address.
-    pub fn new(config: ServerConfig) -> Result<Server, Box<dyn Error + Send + Sync + 'static>> {
+    pub fn new(
+        config: ServerConfig,
+    ) -> Result<Server, Box<dyn Error + Send + Sync + 'static>> {
         let listener = config.addr.bind()?;
         Self::from_listener(listener, config.ssl)
     }
@@ -268,20 +276,27 @@ impl Server {
             all(feature = "ssl-openssl", feature = "ssl-rustls"),
             all(feature = "ssl-openssl", feature = "ssl-native-tls"),
             all(feature = "ssl-native-tls", feature = "ssl-rustls"),
+            all(feature = "ssl-openssl", feature = "ssl-mbedtls"),
+            all(feature = "ssl-native-tls", feature = "ssl-mbedtls"),
+            all(feature = "ssl-rustls", feature = "ssl-mbedtls"),
         ))]
         compile_error!(
-            "Only one feature from 'ssl-openssl', 'ssl-rustls', 'ssl-native-tls' can be enabled at the same time"
+            "Only one feature from 'ssl-openssl', 'ssl-rustls', \
+             'ssl-native-tls', 'ssl-mbedtls' can be enabled at the \
+             same time"
         );
         #[cfg(not(any(
             feature = "ssl-openssl",
             feature = "ssl-rustls",
-            feature = "ssl-native-tls"
+            feature = "ssl-native-tls",
+            feature = "ssl-mbedtls"
         )))]
         type SslContext = ();
         #[cfg(any(
             feature = "ssl-openssl",
             feature = "ssl-rustls",
-            feature = "ssl-native-tls"
+            feature = "ssl-native-tls",
+            feature = "ssl-mbedtls"
         ))]
         type SslContext = crate::ssl::SslContextImpl;
         let ssl: Option<SslContext> = {
@@ -289,7 +304,8 @@ impl Server {
                 #[cfg(any(
                     feature = "ssl-openssl",
                     feature = "ssl-rustls",
-                    feature = "ssl-native-tls"
+                    feature = "ssl-native-tls",
+                    feature = "ssl-mbedtls"
                 ))]
                 Some(config) => Some(SslContext::from_pem(
                     config.certificate,
@@ -298,12 +314,15 @@ impl Server {
                 #[cfg(not(any(
                     feature = "ssl-openssl",
                     feature = "ssl-rustls",
-                    feature = "ssl-native-tls"
+                    feature = "ssl-native-tls",
+                    feature = "ssl-mbedtls"
                 )))]
-                Some(_) => return Err(
-                    "Building a server with SSL requires enabling the `ssl` feature in tiny-http"
-                        .into(),
-                ),
+                Some(_) => {
+                    return Err("Building a server with SSL requires \
+                                enabling the `ssl` feature in \
+                                tiny-http"
+                        .into());
+                }
                 None => None,
             }
         };
@@ -323,12 +342,14 @@ impl Server {
                 let new_client = match server.accept() {
                     Ok((sock, _)) => {
                         use util::RefinedTcpStream;
-                        let (read_closable, write_closable) = match ssl {
+                        let (read_closable, write_closable) = match ssl
+                        {
                             None => RefinedTcpStream::new(sock),
                             #[cfg(any(
                                 feature = "ssl-openssl",
                                 feature = "ssl-rustls",
-                                feature = "ssl-native-tls"
+                                feature = "ssl-native-tls",
+                                feature = "ssl-mbedtls"
                             ))]
                             Some(ref ssl) => {
                                 // trying to apply SSL over the connection
@@ -343,12 +364,16 @@ impl Server {
                             #[cfg(not(any(
                                 feature = "ssl-openssl",
                                 feature = "ssl-rustls",
-                                feature = "ssl-native-tls"
+                                feature = "ssl-native-tls",
+                                feature = "ssl-mbedtls"
                             )))]
                             Some(ref _ssl) => unreachable!(),
                         };
 
-                        Ok(ClientConnection::new(write_closable, read_closable))
+                        Ok(ClientConnection::new(
+                            write_closable,
+                            read_closable,
+                        ))
                     }
                     Err(e) => Err(e),
                 };
@@ -361,9 +386,15 @@ impl Server {
                             if let Some(client) = client.take() {
                                 // Synchronization is needed for HTTPS requests to avoid a deadlock
                                 if client.secure() {
-                                    let (sender, receiver) = mpsc::channel();
+                                    let (sender, receiver) =
+                                        mpsc::channel();
                                     for rq in client {
-                                        messages.push(rq.with_notify_sender(sender.clone()).into());
+                                        messages.push(
+                                            rq.with_notify_sender(
+                                                sender.clone(),
+                                            )
+                                            .into(),
+                                        );
                                         receiver.recv().unwrap();
                                     }
                                 } else {
@@ -376,7 +407,10 @@ impl Server {
                     }
 
                     Err(e) => {
-                        log::error!("Error accepting new client: {}", e);
+                        log::error!(
+                            "Error accepting new client: {}",
+                            e
+                        );
                         inside_messages.push(e.into());
                         break;
                     }
@@ -418,12 +452,18 @@ impl Server {
         match self.messages.pop() {
             Some(Message::Error(err)) => Err(err),
             Some(Message::NewRequest(rq)) => Ok(rq),
-            None => Err(IoError::new(IoErrorKind::Other, "thread unblocked")),
+            None => Err(IoError::new(
+                IoErrorKind::Other,
+                "thread unblocked",
+            )),
         }
     }
 
     /// Same as `recv()` but doesn't block longer than timeout
-    pub fn recv_timeout(&self, timeout: Duration) -> IoResult<Option<Request>> {
+    pub fn recv_timeout(
+        &self,
+        timeout: Duration,
+    ) -> IoResult<Option<Request>> {
         match self.messages.pop_timeout(timeout) {
             Some(Message::Error(err)) => Err(err),
             Some(Message::NewRequest(rq)) => Ok(Some(rq)),
@@ -460,12 +500,15 @@ impl Drop for Server {
         self.close.store(true, Relaxed);
         // Connect briefly to ourselves to unblock the accept thread
         let maybe_stream = match &self.listening_addr {
-            ListenAddr::IP(addr) => TcpStream::connect(addr).map(Connection::from),
+            ListenAddr::IP(addr) => {
+                TcpStream::connect(addr).map(Connection::from)
+            }
             #[cfg(unix)]
             ListenAddr::Unix(addr) => {
                 // TODO: use connect_addr when its stabilized.
                 let path = addr.as_pathname().unwrap();
-                std::os::unix::net::UnixStream::connect(path).map(Connection::from)
+                std::os::unix::net::UnixStream::connect(path)
+                    .map(Connection::from)
             }
         };
         if let Ok(stream) = maybe_stream {

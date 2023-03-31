@@ -25,3 +25,10 @@ pub(crate) mod native_tls;
 pub(crate) use self::native_tls::NativeTlsContext as SslContextImpl;
 #[cfg(feature = "ssl-native-tls")]
 pub(crate) use self::native_tls::NativeTlsStream as SslStream;
+
+#[cfg(feature = "ssl-mbedtls")]
+pub(crate) mod mbedtls;
+#[cfg(feature = "ssl-mbedtls")]
+pub(crate) use self::mbedtls::MbedTlsContext as SslContextImpl;
+#[cfg(feature = "ssl-mbedtls")]
+pub(crate) use self::mbedtls::MbedTlsStream as SslStream;

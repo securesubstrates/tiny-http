@@ -1,11 +1,10 @@
 //! Abstractions of Tcp and Unix socket types
 
+use std::net::{
+    Shutdown, SocketAddr, TcpListener, TcpStream, ToSocketAddrs,
+};
 #[cfg(unix)]
 use std::os::unix::net as unix_net;
-use std::{
-    net::{Shutdown, SocketAddr, TcpListener, TcpStream, ToSocketAddrs},
-    path::PathBuf,
-};
 
 /// Unified listener. Either a [`TcpListener`] or [`std::os::unix::net::UnixListener`]
 pub enum Listener {
@@ -22,13 +21,17 @@ impl Listener {
         }
     }
 
-    pub(crate) fn accept(&self) -> std::io::Result<(Connection, Option<SocketAddr>)> {
+    pub(crate) fn accept(
+        &self,
+    ) -> std::io::Result<(Connection, Option<SocketAddr>)> {
         match self {
-            Self::Tcp(l) => l
-                .accept()
-                .map(|(conn, addr)| (Connection::from(conn), Some(addr))),
+            Self::Tcp(l) => l.accept().map(|(conn, addr)| {
+                (Connection::from(conn), Some(addr))
+            }),
             #[cfg(unix)]
-            Self::Unix(l) => l.accept().map(|(conn, _)| (Connection::from(conn), None)),
+            Self::Unix(l) => l
+                .accept()
+                .map(|(conn, _)| (Connection::from(conn), None)),
         }
     }
 }
@@ -79,7 +82,9 @@ impl std::io::Write for Connection {
 }
 impl Connection {
     /// Gets the peer's address. Some for TCP, None for Unix sockets.
-    pub(crate) fn peer_addr(&mut self) -> std::io::Result<Option<SocketAddr>> {
+    pub(crate) fn peer_addr(
+        &mut self,
+    ) -> std::io::Result<Option<SocketAddr>> {
         match self {
             Self::Tcp(s) => s.peer_addr().map(Some),
             #[cfg(unix)]
@@ -87,7 +92,10 @@ impl Connection {
         }
     }
 
-    pub(crate) fn shutdown(&self, how: Shutdown) -> std::io::Result<()> {
+    pub(crate) fn shutdown(
+        &self,
+        how: Shutdown,
+    ) -> std::io::Result<()> {
         match self {
             Self::Tcp(s) => s.shutdown(how),
             #[cfg(unix)]
@@ -123,7 +131,9 @@ pub enum ConfigListenAddr {
     Unix(std::path::PathBuf),
 }
 impl ConfigListenAddr {
-    pub fn from_socket_addrs<A: ToSocketAddrs>(addrs: A) -> std::io::Result<Self> {
+    pub fn from_socket_addrs<A: ToSocketAddrs>(
+        addrs: A,
+    ) -> std::io::Result<Self> {
         addrs.to_socket_addrs().map(|it| Self::IP(it.collect()))
     }
 
@@ -134,9 +144,13 @@ impl ConfigListenAddr {
 
     pub(crate) fn bind(&self) -> std::io::Result<Listener> {
         match self {
-            Self::IP(a) => TcpListener::bind(a.as_slice()).map(Listener::from),
+            Self::IP(a) => {
+                TcpListener::bind(a.as_slice()).map(Listener::from)
+            }
             #[cfg(unix)]
-            Self::Unix(a) => unix_net::UnixListener::bind(a).map(Listener::from),
+            Self::Unix(a) => {
+                unix_net::UnixListener::bind(a).map(Listener::from)
+            }
         }
     }
 }

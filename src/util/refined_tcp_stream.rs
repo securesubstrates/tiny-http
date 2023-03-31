@@ -6,7 +6,8 @@ use crate::connection::Connection;
 #[cfg(any(
     feature = "ssl-openssl",
     feature = "ssl-rustls",
-    feature = "ssl-native-tls"
+    feature = "ssl-native-tls",
+    feature = "ssl-mbedtls"
 ))]
 use crate::ssl::SslStream;
 
@@ -15,7 +16,8 @@ pub(crate) enum Stream {
     #[cfg(any(
         feature = "ssl-openssl",
         feature = "ssl-rustls",
-        feature = "ssl-native-tls"
+        feature = "ssl-native-tls",
+        feature = "ssl-mbedtls"
     ))]
     Https(SslStream),
 }
@@ -23,13 +25,18 @@ pub(crate) enum Stream {
 impl Clone for Stream {
     fn clone(&self) -> Self {
         match self {
-            Stream::Http(tcp_stream) => Stream::Http(tcp_stream.try_clone().unwrap()),
+            Stream::Http(tcp_stream) => {
+                Stream::Http(tcp_stream.try_clone().unwrap())
+            }
             #[cfg(any(
                 feature = "ssl-openssl",
                 feature = "ssl-rustls",
-                feature = "ssl-native-tls"
+                feature = "ssl-native-tls",
+                feature = "ssl-mbedtls"
             ))]
-            Stream::Https(ssl_stream) => Stream::Https(ssl_stream.clone()),
+            Stream::Https(ssl_stream) => {
+                Stream::Https(ssl_stream.clone())
+            }
         }
     }
 }
@@ -47,7 +54,8 @@ impl Stream {
             #[cfg(any(
                 feature = "ssl-openssl",
                 feature = "ssl-rustls",
-                feature = "ssl-native-tls"
+                feature = "ssl-native-tls",
+                feature = "ssl-mbedtls"
             ))]
             Stream::Https(_) => true,
         }
@@ -59,7 +67,8 @@ impl Stream {
             #[cfg(any(
                 feature = "ssl-openssl",
                 feature = "ssl-rustls",
-                feature = "ssl-native-tls"
+                feature = "ssl-native-tls",
+                feature = "ssl-mbedtls"
             ))]
             Stream::Https(ssl_stream) => ssl_stream.peer_addr(),
         }
@@ -71,7 +80,8 @@ impl Stream {
             #[cfg(any(
                 feature = "ssl-openssl",
                 feature = "ssl-rustls",
-                feature = "ssl-native-tls"
+                feature = "ssl-native-tls",
+                feature = "ssl-mbedtls"
             ))]
             Stream::Https(ssl_stream) => ssl_stream.shutdown(how),
         }
@@ -85,7 +95,8 @@ impl Read for Stream {
             #[cfg(any(
                 feature = "ssl-openssl",
                 feature = "ssl-rustls",
-                feature = "ssl-native-tls"
+                feature = "ssl-native-tls",
+                feature = "ssl-mbedtls"
             ))]
             Stream::Https(ssl_stream) => ssl_stream.read(buf),
         }
@@ -99,7 +110,8 @@ impl Write for Stream {
             #[cfg(any(
                 feature = "ssl-openssl",
                 feature = "ssl-rustls",
-                feature = "ssl-native-tls"
+                feature = "ssl-native-tls",
+                feature = "ssl-mbedtls"
             ))]
             Stream::Https(ssl_stream) => ssl_stream.write(buf),
         }
@@ -111,7 +123,8 @@ impl Write for Stream {
             #[cfg(any(
                 feature = "ssl-openssl",
                 feature = "ssl-rustls",
-                feature = "ssl-native-tls"
+                feature = "ssl-native-tls",
+                feature = "ssl-mbedtls"
             ))]
             Stream::Https(ssl_stream) => ssl_stream.flush(),
         }
@@ -125,7 +138,9 @@ pub struct RefinedTcpStream {
 }
 
 impl RefinedTcpStream {
-    pub(crate) fn new<S>(stream: S) -> (RefinedTcpStream, RefinedTcpStream)
+    pub(crate) fn new<S>(
+        stream: S,
+    ) -> (RefinedTcpStream, RefinedTcpStream)
     where
         S: Into<Stream>,
     {

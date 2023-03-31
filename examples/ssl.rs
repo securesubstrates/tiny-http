@@ -3,16 +3,21 @@ extern crate tiny_http;
 #[cfg(not(any(
     feature = "ssl-openssl",
     feature = "ssl-rustls",
-    feature = "ssl-native-tls"
+    feature = "ssl-native-tls",
+    feature = "ssl-mbedtls"
 )))]
 fn main() {
-    println!("This example requires one of the supported `ssl-*` features to be enabled");
+    println!(
+        "This example requires one of the supported `ssl-*` features \
+         to be enabled"
+    );
 }
 
 #[cfg(any(
     feature = "ssl-openssl",
     feature = "ssl-rustls",
-    feature = "ssl-native-tls"
+    feature = "ssl-native-tls",
+    feature = "ssl-mbedtls"
 ))]
 fn main() {
     use tiny_http::{Response, Server};
@@ -27,9 +32,11 @@ fn main() {
     .unwrap();
 
     println!(
-        "Note: connecting to this server will likely give you a warning from your browser \
-              because the connection is unsecure. This is because the certificate used by this \
-              example is self-signed. With a real certificate, you wouldn't get this warning."
+        "Note: connecting to this server will likely give you a \
+         warning from your browser because the connection is \
+         unsecure. This is because the certificate used by this \
+         example is self-signed. With a real certificate, you \
+         wouldn't get this warning."
     );
 
     for request in server.incoming_requests() {

@@ -17,13 +17,14 @@ ssl = ["ssl-openssl"]
 ssl-openssl = ["openssl", "zeroize"]
 ssl-rustls = ["rustls", "rustls-pemfile", "zeroize"]
 ssl-native-tls = ["native-tls", "zeroize"]
+ssl-mbedtls = ["mbedtls", "zeroize"]
 
 [dependencies]
 ascii = "1.0"
 chunked_transfer = "1"
 httpdate = "1.0.2"
-
 log = { version = "0.4.4", optional = true }
+mbedtls = { version = "0.8.1", optional = true, features = ["rdrand", "force_aesni_support"] }
 openssl = { version = "0.10", optional = true }
 rustls = { version = "0.20", optional = true }
 rustls-pemfile = { version = "0.2.1", optional = true }
@@ -31,10 +32,18 @@ zeroize = { version = "1", optional = true }
 native-tls = { version = "0.2", optional = true }
 
 [dev-dependencies]
-rustc-serialize = "0.3"
-sha1 = "0.6.0"
-fdlimit = "0.1"
+  sha1 = "0.6.0"
+
+[target.'cfg(target_env = "sgx")'.dev-dependencies]
+  base64 = "0.21.0"
+
+[target.'cfg(not(target_env = "sgx"))'.dev-dependencies]
+  rustc-serialize = "0.3"
+  fdlimit = "0.1"
 
 [package.metadata.docs.rs]
 # Enable just one SSL implementation
 features = ["ssl-openssl"]
+
+[package.metadata.fortanix-sgx]
+  threads = 100
