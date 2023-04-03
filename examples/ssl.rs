@@ -22,12 +22,17 @@ fn main() {
 fn main() {
     use tiny_http::{Response, Server};
 
+    let mut ssl_conf =  tiny_http::SslConfig {
+      certificate: include_bytes!("ssl-cert.pem").to_vec(),
+      private_key: include_bytes!("ssl-key.pem").to_vec(),
+    };
+
+    ssl_conf.certificate.push(0);
+    ssl_conf.private_key.push(0);
+
     let server = Server::https(
         "0.0.0.0:8000",
-        tiny_http::SslConfig {
-            certificate: include_bytes!("ssl-cert.pem").to_vec(),
-            private_key: include_bytes!("ssl-key.pem").to_vec(),
-        },
+        ssl_conf
     )
     .unwrap();
 
@@ -52,6 +57,7 @@ fn main() {
         let response = Response::from_string("hello world");
         request
             .respond(response)
-            .unwrap_or(println!("Failed to respond to request"));
+            .unwrap();
+//            .unwrap_or(println!("Failed to respond to request"));
     }
 }

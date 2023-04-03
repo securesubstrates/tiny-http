@@ -27,7 +27,7 @@ struct Sharing {
 }
 
 /// Minimum number of active threads.
-static MIN_THREADS: usize = 4;
+static MIN_THREADS: usize = 1;
 
 struct Registration<'a> {
     nb: &'a AtomicUsize,

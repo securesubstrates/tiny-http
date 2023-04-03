@@ -3,11 +3,14 @@ use crate::util::refined_tcp_stream::Stream as RefinedStream;
 use mbedtls::pk;
 use mbedtls::rng::{CtrDrbg, Rdseed};
 use mbedtls::ssl::config::{Endpoint, Preset, Transport};
+use mbedtls::ssl::CipherSuite;
 use mbedtls::ssl::{Config, Context, Version};
 use mbedtls::x509::Certificate;
 use std::error::Error;
 use std::io::{Read, Write};
-use std::net::{Shutdown, SocketAddr};
+use std::net::{Shutdown, SocketAddr, TcpStream};
+#[cfg(unix)]
+use std::os::unix::net as unix_net;
 use std::sync::{Arc, Mutex};
 use zeroize::Zeroizing;
 
@@ -25,12 +28,31 @@ impl MbedTlsStream {
 
     pub(crate) fn shutdown(
         &mut self,
-        _how: Shutdown,
+        how: Shutdown,
     ) -> std::io::Result<()> {
-        self.io
+        if let Some(inner_io) = self
+            .io
             .lock()
             .expect("Failed to lock SSL stream mutex")
-            .close();
+            .io_mut()
+            .and_then(|io_inner| io_inner.downcast_mut::<TcpStream>())
+        {
+            return inner_io.shutdown(how);
+        }
+
+        #[cfg(unix)]
+        if let Some(inner_io) = self
+            .io
+            .lock()
+            .expect("Failed to lock SSL stream mutex")
+            .io_mut()
+            .and_then(|io_inner| {
+                io_inner.downcast_mut::<unix_net::UnixStream>()
+            })
+        {
+            return inner_io.shutdown(how);
+        }
+
         Ok(())
     }
 }
@@ -76,6 +98,20 @@ impl MbedTlsContext {
         certificates: Vec<u8>,
         private_key: Zeroizing<Vec<u8>>,
     ) -> Result<Self, Box<dyn Error + Send + Sync>> {
+        let ciphers: Vec<i32> = vec![
+            CipherSuite::EcdhePskWithAes256CbcSha384.into(),
+            CipherSuite::EcdhePskWithAes128CbcSha256.into(),
+            CipherSuite::EcdheEcdsaWithAes256GcmSha384.into(),
+            CipherSuite::EcdheEcdsaWithAes128GcmSha256.into(),
+            CipherSuite::EcdheRsaWithAes256GcmSha384.into(),
+            CipherSuite::EcdheRsaWithAes128GcmSha256.into(),
+            CipherSuite::EcdhEcdsaWithAes256GcmSha384.into(),
+            CipherSuite::EcdhRsaWithAes256GcmSha384.into(),
+            CipherSuite::EcdhEcdsaWithAes128GcmSha256.into(),
+            CipherSuite::EcdhRsaWithAes128GcmSha256.into(),
+            0,
+        ];
+
         let cert =
             Arc::new(Certificate::from_pem_multiple(&certificates)?);
         let key =
@@ -91,6 +127,7 @@ impl MbedTlsContext {
         cfg.set_min_version(Version::Tls1_2)?;
         cfg.set_rng(rng);
         cfg.push_cert(cert, key)?;
+        cfg.set_ciphersuites(Arc::new(ciphers));
         Ok(MbedTlsContext(Arc::new(cfg)))
     }
 
@@ -104,7 +141,7 @@ impl MbedTlsContext {
         let addr = match stream {
             Connection::Tcp(tcp) => {
                 let addr = tcp.peer_addr();
-                con.establish(tcp, None)?;
+                con.establish(tcp, Some("Euler.local"))?;
                 addr.ok()
             }
             #[cfg(unix)]
