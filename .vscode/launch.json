@@ -1,0 +1,403 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in library 'tiny_http'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--lib",
+          "--package=tiny_http"
+        ],
+        "filter": {
+          "name": "tiny_http",
+          "kind": "lib"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug example 'websockets'",
+      "cargo": {
+        "args": [
+          "build",
+          "--example=websockets",
+          "--package=tiny_http"
+        ],
+        "filter": {
+          "name": "websockets",
+          "kind": "example"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in example 'websockets'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--example=websockets",
+          "--package=tiny_http"
+        ],
+        "filter": {
+          "name": "websockets",
+          "kind": "example"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug example 'serve-root'",
+      "cargo": {
+        "args": [
+          "build",
+          "--example=serve-root",
+          "--package=tiny_http"
+        ],
+        "filter": {
+          "name": "serve-root",
+          "kind": "example"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in example 'serve-root'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--example=serve-root",
+          "--package=tiny_http"
+        ],
+        "filter": {
+          "name": "serve-root",
+          "kind": "example"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug example 'readme-example'",
+      "cargo": {
+        "args": [
+          "build",
+          "--example=readme-example",
+          "--package=tiny_http"
+        ],
+        "filter": {
+          "name": "readme-example",
+          "kind": "example"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in example 'readme-example'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--example=readme-example",
+          "--package=tiny_http"
+        ],
+        "filter": {
+          "name": "readme-example",
+          "kind": "example"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug example 'ssl'",
+      "cargo": {
+        "args": [
+          "build",
+          "--features",
+          "ssl-mbedtls",
+          "--example=ssl",
+          "--package=tiny_http"
+        ],
+        "filter": {
+          "name": "ssl",
+          "kind": "example"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in example 'ssl'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--example=ssl",
+          "--package=tiny_http"
+        ],
+        "filter": {
+          "name": "ssl",
+          "kind": "example"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug example 'hello-world'",
+      "cargo": {
+        "args": [
+          "build",
+          "--example=hello-world",
+          "--package=tiny_http"
+        ],
+        "filter": {
+          "name": "hello-world",
+          "kind": "example"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in example 'hello-world'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--example=hello-world",
+          "--package=tiny_http"
+        ],
+        "filter": {
+          "name": "hello-world",
+          "kind": "example"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug example 'php-cgi'",
+      "cargo": {
+        "args": [
+          "build",
+          "--example=php-cgi",
+          "--package=tiny_http"
+        ],
+        "filter": {
+          "name": "php-cgi",
+          "kind": "example"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in example 'php-cgi'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--example=php-cgi",
+          "--package=tiny_http"
+        ],
+        "filter": {
+          "name": "php-cgi",
+          "kind": "example"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug integration test 'non-chunked-buffering'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--test=non-chunked-buffering",
+          "--package=tiny_http"
+        ],
+        "filter": {
+          "name": "non-chunked-buffering",
+          "kind": "test"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug integration test 'input-tests'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--test=input-tests",
+          "--package=tiny_http"
+        ],
+        "filter": {
+          "name": "input-tests",
+          "kind": "test"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug integration test 'unblock-test'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--test=unblock-test",
+          "--package=tiny_http"
+        ],
+        "filter": {
+          "name": "unblock-test",
+          "kind": "test"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug integration test 'network'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--test=network",
+          "--package=tiny_http"
+        ],
+        "filter": {
+          "name": "network",
+          "kind": "test"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug integration test 'unix-test'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--test=unix-test",
+          "--package=tiny_http"
+        ],
+        "filter": {
+          "name": "unix-test",
+          "kind": "test"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug integration test 'simple-test'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--test=simple-test",
+          "--package=tiny_http"
+        ],
+        "filter": {
+          "name": "simple-test",
+          "kind": "test"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug integration test 'promptness'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--test=promptness",
+          "--package=tiny_http"
+        ],
+        "filter": {
+          "name": "promptness",
+          "kind": "test"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug benchmark 'bench'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--bench=bench",
+          "--package=tiny_http"
+        ],
+        "filter": {
+          "name": "bench",
+          "kind": "bench"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}
