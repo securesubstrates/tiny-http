@@ -5,6 +5,8 @@ use std::net::{
 };
 #[cfg(unix)]
 use std::os::unix::net as unix_net;
+#[cfg(unix)]
+use std::path::PathBuf;
 
 /// Unified listener. Either a [`TcpListener`] or [`std::os::unix::net::UnixListener`]
 pub enum Listener {

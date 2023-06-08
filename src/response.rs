@@ -73,7 +73,8 @@ impl FromStr for TransferEncoding {
 /// Builds a Date: header with the current date.
 fn build_date_header() -> Header {
     let d = HttpDate::from(SystemTime::now());
-    Header::from_bytes(&b"Date"[..], &d.to_string().into_bytes()[..]).unwrap()
+    Header::from_bytes(&b"Date"[..], &d.to_string().into_bytes()[..])
+        .unwrap()
 }
 
 fn write_message_header<W>(
@@ -144,7 +145,9 @@ fn choose_transfer_encoding(
             let mut parse = util::parse_header_value(value.as_str()); // TODO: remove conversion
 
             // sorting elements by most priority
-            parse.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(Ordering::Equal));
+            parse.sort_by(|a, b| {
+                b.1.partial_cmp(&a.1).unwrap_or(Ordering::Equal)
+            });
 
             // trying to parse each requested encoding
             for value in parse.iter() {
@@ -226,7 +229,10 @@ where
     /// transfer. Notice that chunked transfer might happen regardless of
     /// this threshold, for instance when the request headers indicate
     /// it is wanted or when there is no `Content-Length`.
-    pub fn with_chunked_threshold(mut self, length: usize) -> Response<R> {
+    pub fn with_chunked_threshold(
+        mut self,
+        length: usize,
+    ) -> Response<R> {
         self.chunked_threshold = Some(length);
         self
     }
@@ -309,7 +315,11 @@ where
     }
 
     /// Returns the same request, but with different data.
-    pub fn with_data<S>(self, reader: S, data_length: Option<usize>) -> Response<S>
+    pub fn with_data<S>(
+        self,
+        reader: S,
+        data_length: Option<usize>,
+    ) -> Response<S>
     where
         S: Read,
     {
@@ -357,7 +367,11 @@ where
         if !self.headers.iter().any(|h| h.field.equiv("Server")) {
             self.headers.insert(
                 0,
-                Header::from_bytes(&b"Server"[..], &b"tiny-http (Rust)"[..]).unwrap(),
+                Header::from_bytes(
+                    &b"Server"[..],
+                    &b"tiny-http (Rust)"[..],
+                )
+                .unwrap(),
             );
         }
 
@@ -365,11 +379,13 @@ where
         if let Some(upgrade) = upgrade {
             self.headers.insert(
                 0,
-                Header::from_bytes(&b"Upgrade"[..], upgrade.as_bytes()).unwrap(),
+                Header::from_bytes(&b"Upgrade"[..], upgrade.as_bytes())
+                    .unwrap(),
             );
             self.headers.insert(
                 0,
-                Header::from_bytes(&b"Connection"[..], &b"upgrade"[..]).unwrap(),
+                Header::from_bytes(&b"Connection"[..], &b"upgrade"[..])
+                    .unwrap(),
             );
             transfer_encoding = None;
         }
@@ -399,9 +415,13 @@ where
 
         // preparing headers for transfer
         match transfer_encoding {
-            Some(TransferEncoding::Chunked) => self
-                .headers
-                .push(Header::from_bytes(&b"Transfer-Encoding"[..], &b"chunked"[..]).unwrap()),
+            Some(TransferEncoding::Chunked) => self.headers.push(
+                Header::from_bytes(
+                    &b"Transfer-Encoding"[..],
+                    &b"chunked"[..],
+                )
+                .unwrap(),
+            ),
 
             Some(TransferEncoding::Identity) => {
                 assert!(data_length.is_some());
@@ -530,8 +550,11 @@ impl Response<Cursor<Vec<u8>>> {
         Response::new(
             StatusCode(200),
             vec![
-                Header::from_bytes(&b"Content-Type"[..], &b"text/plain; charset=UTF-8"[..])
-                    .unwrap(),
+                Header::from_bytes(
+                    &b"Content-Type"[..],
+                    &b"text/plain; charset=UTF-8"[..],
+                )
+                .unwrap(),
             ],
             Cursor::new(data.into_bytes()),
             Some(data_len),
