@@ -15,7 +15,7 @@ use std::sync::{Arc, Mutex};
 use zeroize::Zeroizing;
 
 pub(crate) struct MbedTlsStream {
-    io: Arc<Mutex<Context>>,
+    io: Arc<Mutex<Context<TcpStream>>>,
     peer_addr: Option<SocketAddr>,
 }
 
@@ -35,7 +35,6 @@ impl MbedTlsStream {
             .lock()
             .expect("Failed to lock SSL stream mutex")
             .io_mut()
-            .and_then(|io_inner| io_inner.downcast_mut::<TcpStream>())
         {
             return inner_io.shutdown(how);
         }
@@ -46,9 +45,6 @@ impl MbedTlsStream {
             .lock()
             .expect("Failed to lock SSL stream mutex")
             .io_mut()
-            .and_then(|io_inner| {
-                io_inner.downcast_mut::<unix_net::UnixStream>()
-            })
         {
             return inner_io.shutdown(how);
         }
