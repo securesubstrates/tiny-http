@@ -9,8 +9,6 @@ use mbedtls::x509::Certificate;
 use std::error::Error;
 use std::io::{Read, Write};
 use std::net::{Shutdown, SocketAddr, TcpStream};
-#[cfg(unix)]
-use std::os::unix::net as unix_net;
 use std::sync::{Arc, Mutex};
 use zeroize::Zeroizing;
 
@@ -141,8 +139,9 @@ impl MbedTlsContext {
                 addr.ok()
             }
             #[cfg(unix)]
-            Connection::Unix(unix) => {
-                con.establish(unix, None)?;
+          Connection::Unix(_unix) => {
+            // todo!();
+                // con.establish(unix, None)?;
                 None
             }
         };
