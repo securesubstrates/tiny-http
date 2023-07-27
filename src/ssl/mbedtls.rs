@@ -3,7 +3,7 @@ use crate::util::refined_tcp_stream::Stream as RefinedStream;
 use mbedtls::pk;
 use mbedtls::rng::{CtrDrbg, Rdseed};
 use mbedtls::ssl::config::{Endpoint, Preset, Transport};
-use mbedtls::ssl::CipherSuite;
+use mbedtls::ssl::Tls12CipherSuite as CipherSuite;
 use mbedtls::ssl::{Config, Context, Version};
 use mbedtls::x509::Certificate;
 use std::error::Error;
@@ -105,11 +105,14 @@ impl MbedTlsContext {
             CipherSuite::EcdhRsaWithAes128GcmSha256.into(),
             0,
         ];
-
+        let mut blinder = CtrDrbg::new(Arc::new(Rdseed), None)?;
         let cert =
             Arc::new(Certificate::from_pem_multiple(&certificates)?);
-        let key =
-            Arc::new(pk::Pk::from_private_key(&private_key, None)?);
+        let key = Arc::new(pk::Pk::from_private_key(
+            &mut blinder,
+            &private_key,
+            None,
+        )?);
 
         let rng = Arc::new(CtrDrbg::new(Arc::new(Rdseed), None)?);
 
@@ -118,7 +121,7 @@ impl MbedTlsContext {
             Transport::Stream,
             Preset::Default,
         );
-        cfg.set_min_version(Version::Tls1_2)?;
+        cfg.set_min_version(Version::Tls12)?;
         cfg.set_rng(rng);
         cfg.push_cert(cert, key)?;
         cfg.set_ciphersuites(Arc::new(ciphers));
@@ -139,8 +142,8 @@ impl MbedTlsContext {
                 addr.ok()
             }
             #[cfg(unix)]
-          Connection::Unix(_unix) => {
-            // todo!();
+            Connection::Unix(_unix) => {
+                // todo!();
                 // con.establish(unix, None)?;
                 None
             }

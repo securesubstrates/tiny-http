@@ -137,7 +137,7 @@
     {
       "type": "lldb",
       "request": "launch",
-      "name": "Debug example 'ssl'",
+      "name": "mbedtls-test",
       "cargo": {
         "args": [
           "build",
