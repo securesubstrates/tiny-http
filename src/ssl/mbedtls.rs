@@ -2,8 +2,12 @@ use crate::connection::Connection;
 use crate::util::refined_tcp_stream::Stream as RefinedStream;
 use mbedtls::pk;
 use mbedtls::rng::{CtrDrbg, Rdseed};
-use mbedtls::ssl::config::{Endpoint, Preset, Transport};
-use mbedtls::ssl::Tls12CipherSuite as CipherSuite;
+use mbedtls::ssl::config::{
+    Endpoint, Preset, Tls13KeyExchangeMode, Transport,
+};
+use mbedtls::ssl::{
+    tls13_preset_default_sig_algs, Tls12CipherSuite, Tls13CipherSuite,
+};
 use mbedtls::ssl::{Config, Context, Version};
 use mbedtls::x509::Certificate;
 use std::error::Error;
@@ -93,18 +97,28 @@ impl MbedTlsContext {
         private_key: Zeroizing<Vec<u8>>,
     ) -> Result<Self, Box<dyn Error + Send + Sync>> {
         let ciphers: Vec<i32> = vec![
-            CipherSuite::EcdhePskWithAes256CbcSha384.into(),
-            CipherSuite::EcdhePskWithAes128CbcSha256.into(),
-            CipherSuite::EcdheEcdsaWithAes256GcmSha384.into(),
-            CipherSuite::EcdheEcdsaWithAes128GcmSha256.into(),
-            CipherSuite::EcdheRsaWithAes256GcmSha384.into(),
-            CipherSuite::EcdheRsaWithAes128GcmSha256.into(),
-            CipherSuite::EcdhEcdsaWithAes256GcmSha384.into(),
-            CipherSuite::EcdhRsaWithAes256GcmSha384.into(),
-            CipherSuite::EcdhEcdsaWithAes128GcmSha256.into(),
-            CipherSuite::EcdhRsaWithAes128GcmSha256.into(),
+            //
+            // TLS 1.3 cipher suite
+            //
+            Tls13CipherSuite::Tls13Aes256GcmSha384.into(),
+            Tls13CipherSuite::Tls13Aes128GcmSha256.into(),
+            Tls13CipherSuite::Tls13Aes128CcmSha256.into(),
+            //
+            // TLS 1.2 cipher suites
+            //
+            Tls12CipherSuite::EcdhePskWithAes256CbcSha384.into(),
+            Tls12CipherSuite::EcdhePskWithAes128CbcSha256.into(),
+            Tls12CipherSuite::EcdheEcdsaWithAes256GcmSha384.into(),
+            Tls12CipherSuite::EcdheEcdsaWithAes128GcmSha256.into(),
+            Tls12CipherSuite::EcdheRsaWithAes256GcmSha384.into(),
+            Tls12CipherSuite::EcdheRsaWithAes128GcmSha256.into(),
+            Tls12CipherSuite::EcdhEcdsaWithAes256GcmSha384.into(),
+            Tls12CipherSuite::EcdhRsaWithAes256GcmSha384.into(),
+            Tls12CipherSuite::EcdhEcdsaWithAes128GcmSha256.into(),
+            Tls12CipherSuite::EcdhRsaWithAes128GcmSha256.into(),
             0,
         ];
+
         let mut blinder = CtrDrbg::new(Arc::new(Rdseed), None)?;
         let cert =
             Arc::new(Certificate::from_pem_multiple(&certificates)?);
@@ -125,6 +139,12 @@ impl MbedTlsContext {
         cfg.set_rng(rng);
         cfg.push_cert(cert, key)?;
         cfg.set_ciphersuites(Arc::new(ciphers));
+        cfg.set_signature_algorithms(Arc::new(
+            tls13_preset_default_sig_algs(),
+        ));
+        cfg.set_tls13_key_exchange_modes(
+            Tls13KeyExchangeMode::EPHEMERAL,
+        );
         Ok(MbedTlsContext(Arc::new(cfg)))
     }
 
