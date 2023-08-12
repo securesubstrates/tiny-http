@@ -1,6 +1,7 @@
 use crate::connection::Connection;
 use crate::util::refined_tcp_stream::Stream as RefinedStream;
 use mbedtls::pk;
+use mbedtls::pk::EcGroupId;
 use mbedtls::rng::{CtrDrbg, Rdseed};
 use mbedtls::ssl::config::{
     Endpoint, Preset, Tls13KeyExchangeMode, Transport,
@@ -106,16 +107,18 @@ impl MbedTlsContext {
             //
             // TLS 1.2 cipher suites
             //
-            Tls12CipherSuite::EcdhePskWithAes256CbcSha384.into(),
-            Tls12CipherSuite::EcdhePskWithAes128CbcSha256.into(),
             Tls12CipherSuite::EcdheEcdsaWithAes256GcmSha384.into(),
             Tls12CipherSuite::EcdheEcdsaWithAes128GcmSha256.into(),
             Tls12CipherSuite::EcdheRsaWithAes256GcmSha384.into(),
             Tls12CipherSuite::EcdheRsaWithAes128GcmSha256.into(),
-            Tls12CipherSuite::EcdhEcdsaWithAes256GcmSha384.into(),
-            Tls12CipherSuite::EcdhRsaWithAes256GcmSha384.into(),
-            Tls12CipherSuite::EcdhEcdsaWithAes128GcmSha256.into(),
-            Tls12CipherSuite::EcdhRsaWithAes128GcmSha256.into(),
+            0,
+        ];
+
+        let curves: Vec<u32> = vec![
+            EcGroupId::SecP384R1.into(),
+            EcGroupId::Curve448.into(),
+            EcGroupId::SecP256R1.into(),
+            EcGroupId::Curve25519.into(),
             0,
         ];
 
@@ -145,6 +148,7 @@ impl MbedTlsContext {
         cfg.set_tls13_key_exchange_modes(
             Tls13KeyExchangeMode::EPHEMERAL,
         );
+        cfg.set_curves(Arc::new(curves));
         Ok(MbedTlsContext(Arc::new(cfg)))
     }
 
@@ -158,7 +162,7 @@ impl MbedTlsContext {
         let addr = match stream {
             Connection::Tcp(tcp) => {
                 let addr = tcp.peer_addr();
-                con.establish(tcp, Some("Euler.local"))?;
+                con.establish(tcp, None)?;
                 addr.ok()
             }
             #[cfg(unix)]
