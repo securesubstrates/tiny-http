@@ -35,7 +35,7 @@ native-tls = { version = "0.2", optional = true }
   sha1 = "0.6.0"
 
 [target.'cfg(target_env = "sgx")'.dev-dependencies]
-  base64 = "0.21.0"
+  base64 = "0.21"
 
 [target.'cfg(not(target_env = "sgx"))'.dev-dependencies]
   rustc-serialize = "0.3"
